@@ -95,14 +95,49 @@ void Cloth::initializeSpring() {
   //   ===============================================
   // Here is a simple example which connects the horizontal structrual springs.
   float structrualLength = (_particles.position(0) - _particles.position(1)).norm();
+  
+  // Handle STRUCTURE TYPE ->horizontal
   for (int i = 0; i < particlesPerEdge; ++i) {
     for (int j = 0; j < particlesPerEdge - 1; ++j) {
       int index = i * particlesPerEdge + j;
       _springs.emplace_back(index, index + 1, structrualLength, Spring::Type::STRUCTURAL);
     }
   }
+  // Handle Vertical
+  for (int i = 0; i < (particlesPerEdge * particlesPerEdge - particlesPerEdge); ++i) {
+    // Each string is responsible for the particle below it.
+    _springs.emplace_back(i, i + particlesPerEdge, structrualLength, Spring::Type::STRUCTURAL);
+  }
 
-  // Write code here!
+  // Handle BEND TYPE -> Horizontal
+  float bendLength = (_particles.position(0) - _particles.position(2)).norm();
+  for (int i = 0; i < particlesPerEdge; ++i) {
+    for (int j = 0; j < particlesPerEdge - 2; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + 2, bendLength, Spring::Type::BEND);
+    }
+  }
+  // Handle Vertical
+  for (int i = 0; i < (particlesPerEdge * (particlesPerEdge - 2)); ++i) {
+    // Each string is responsible for the particle below it.
+    _springs.emplace_back(i, i + particlesPerEdge * 2, bendLength, Spring::Type::BEND);
+  }
+
+  // Handle SHEAR TYPE -> right & below
+  float shearLength = sqrt(2);
+  for (int i = 0; i < particlesPerEdge - 1; ++i) {
+    for (int j = 0; j < particlesPerEdge - 1; ++j) {
+      int index = i * particlesPerEdge + j;
+      _springs.emplace_back(index, index + particlesPerEdge + 1, shearLength, Spring::Type::SHEAR);
+    }
+  }
+  // Handle left & below
+  for (int i = 0; i < particlesPerEdge - 1; ++i) {
+    for (int j = 0; j < particlesPerEdge - 1; ++j) {
+      int index = i * particlesPerEdge + j + 1;
+      _springs.emplace_back(index, index + particlesPerEdge - 1, shearLength, Spring::Type::SHEAR);
+    }
+  }
 
   std::vector<GLuint> structrualIndices, shearIndices, bendIndices;
   for (const auto& spring : _springs) {
