@@ -1,6 +1,6 @@
 #include "cloth.h"
 #include <Eigen/Geometry>
-
+#include <iostream>
 #include "configs.h"
 #include "sphere.h"
 
@@ -175,7 +175,35 @@ void Cloth::computeSpringForce() {
   //   3. Use a.dot(b) to get dot product of a and b.
   for (const auto& spring : _springs) {
     // Write code here!
-    //_particles.acceleration(index) += force * _particles.inverseMass(index);
+    // 1. Read something we need.
+    float resetLength = spring.length();
+    Eigen::Vector4f startParticlePosition = _particles.position(spring.startParticleIndex());
+    Eigen::Vector4f endParticlePosition = _particles.position(spring.endParticleIndex());
+    Eigen::Vector4f startParticleVelocity = _particles.velocity(spring.startParticleIndex());
+    Eigen::Vector4f endParticleVelocity = _particles.velocity(spring.endParticleIndex());
+
+    // 2. Calculate Force (Spring & Damper)
+    // F = -Ks( |Xa-Xb| -L0 ) * ( Xa - Xb ) / |Xa -Xb|
+    //     -Kd( (Va-Vb).(Xa-Xb) / |Xa - Xb| ) * ( Xa - Xb ) / |Xa -Xb|
+    Eigen::Vector4f forceA =
+        (-1) * springCoef * ( (startParticlePosition - endParticlePosition).norm() - resetLength) *
+            (startParticlePosition - endParticlePosition).normalized() 
+            - damperCoef *
+            ( (startParticleVelocity - endParticleVelocity).dot(startParticlePosition - endParticlePosition) /
+             (startParticlePosition - endParticlePosition).norm()) *
+            (startParticlePosition - endParticlePosition).normalized();
+
+    Eigen::Vector4f forceB =
+        (-1) * springCoef * ((endParticlePosition - startParticlePosition).norm() - resetLength) *
+            (endParticlePosition - startParticlePosition).normalized() 
+            - damperCoef *
+            ((endParticleVelocity - startParticleVelocity).dot(endParticlePosition - startParticlePosition) /
+             (endParticlePosition - startParticlePosition).norm()) *
+            (endParticlePosition - startParticlePosition).normalized();
+    
+    // 3. Modify acceleration
+    _particles.acceleration(spring.startParticleIndex()) += forceA * _particles.inverseMass(spring.startParticleIndex());
+    _particles.acceleration(spring.endParticleIndex()) += forceB * _particles.inverseMass(spring.endParticleIndex());
   }
 }
 
