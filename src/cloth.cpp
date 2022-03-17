@@ -124,7 +124,7 @@ void Cloth::initializeSpring() {
   }
 
   // Handle SHEAR TYPE -> right & below
-  float shearLength = sqrt(2);
+  float shearLength = (_particles.position(0) - _particles.position(particlesPerEdge+1)).norm();
   for (int i = 0; i < particlesPerEdge - 1; ++i) {
     for (int j = 0; j < particlesPerEdge - 1; ++j) {
       int index = i * particlesPerEdge + j;
@@ -160,6 +160,7 @@ void Cloth::initializeSpring() {
   shearSpring.allocate_load(shearIndices.size() * sizeof(GLuint), shearIndices.data());
   bendSpring.allocate_load(bendIndices.size() * sizeof(GLuint), bendIndices.data());
 }
+
 void Cloth::computeSpringForce() {
   // TODO: Compute spring force and damper force for each spring.
   //   1. Read the start and end index from spring
@@ -174,6 +175,7 @@ void Cloth::computeSpringForce() {
   //   3. Use a.dot(b) to get dot product of a and b.
   for (const auto& spring : _springs) {
     // Write code here!
+    //_particles.acceleration(index) += force * _particles.inverseMass(index);
   }
 }
 
