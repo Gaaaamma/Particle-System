@@ -181,4 +181,40 @@ void Spheres::collide() {
   //   1. You can simply push particles back to prevent penetration.
 
   // Write code here!
+  // Collision detected -> there are 'sphereCount' balls
+  for (int i = 0; i < sphereCount; i++) {
+    // sphere need to check if it collides any paritcle on the clothes
+    for (int j = i; j < sphereCount; j++) {
+      // Collision Detected
+      if (i != j) { // Means different ball
+        float sphereClothsDistance = (_particles.position(i) - _particles.position(j)).norm();
+        if (sphereClothsDistance <= (radius(i) + radius(j))) {
+          // if penetration happened -> handling
+          float penetration = radius(i) + radius(j) - sphereClothsDistance;
+          Eigen::Vector4f normal = (_particles.position(i) - _particles.position(j)).normalized();
+          Eigen::Vector4f correction = penetration * normal * 0.15f;
+          _particles.position(i) += correction;
+          _particles.position(j) -= correction;
+
+          // update velocity
+          // Calculate V_normal & V_tangent
+          float sp1_v_normal = _particles.velocity(i).dot(normal);
+          Eigen::Vector4f sp1_v_tangent_vec = _particles.velocity(i) - sp1_v_normal * normal;
+
+          float sp2_v_normal = _particles.velocity(j).dot(normal);
+          Eigen::Vector4f sp2_v_tangent_vec = _particles.velocity(j) - sp2_v_normal * normal;
+
+          float sp_v_normal_AC = (_particles.mass(i) * sp1_v_normal + _particles.mass(j) * sp2_v_normal +
+                                  _particles.mass(j) * coefRestitution * (sp2_v_normal - sp1_v_normal)) /
+                                 (_particles.mass(i) + _particles.mass(j));
+          float sp2_v_normal_AC = (_particles.mass(i) * sp1_v_normal + _particles.mass(j) * sp2_v_normal +
+                                  _particles.mass(i) * coefRestitution * (sp1_v_normal - sp2_v_normal)) /
+                                 (_particles.mass(i) + _particles.mass(j));
+
+          _particles.velocity(i) = sp_v_normal_AC * normal + sp1_v_tangent_vec;
+          _particles.velocity(j) = sp2_v_normal_AC * normal + sp2_v_tangent_vec;
+        }
+      }
+    }
+  }
 }
