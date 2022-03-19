@@ -131,7 +131,40 @@ void Spheres::collide(Cloth* cloth) {
   //       _particles.position(i) += correction;
   //       _particles.position(j) -= correction;
 
-  // Write code here!
+  // Collision detected -> there are 'sphereCount' balls
+  for (int i = 0; i < sphereCount; i++) {
+    // sphere need to check if it collides any paritcle on the clothes
+    for (int j = 0; j < particlesPerEdge * particlesPerEdge; j++) {
+      // Collision Detected
+      float sphereClothsDistance = (_particles.position(i) - cloth->particles().position(j)).norm();
+      if ( sphereClothsDistance <= radius(i)) {
+        // if penetration happened -> handling
+        float penetration = radius(i) - sphereClothsDistance;
+        Eigen::Vector4f normal = (_particles.position(i) - cloth->particles().position(j)).normalized();
+        Eigen::Vector4f correction = penetration * normal * 0.15f;
+        _particles.position(i) += correction;
+        cloth->particles().position(j) -= correction;
+
+        // update velocity
+        // Calculate V_normal & V_tangent
+        float sp_v_normal = _particles.velocity(i).dot(normal);
+        Eigen::Vector4f sp_v_tangent_vec = _particles.velocity(i) - sp_v_normal * normal;
+
+        float cl_v_normal = (cloth->particles().velocity(j)).dot(normal);
+        Eigen::Vector4f cl_v_tangent_vec = cloth->particles().velocity(j) - cl_v_normal * normal;
+
+        float sp_v_normal_AC = (_particles.mass(i) * sp_v_normal + cloth->particles().mass(j) * cl_v_normal +
+                                cloth->particles().mass(j) * coefRestitution * (cl_v_normal - sp_v_normal)) /
+                               (_particles.mass(i) + cloth->particles().mass(j));
+        float cl_v_normal_AC = (_particles.mass(i) * sp_v_normal + cloth->particles().mass(j) * cl_v_normal +
+                                _particles.mass(i) * coefRestitution * (sp_v_normal - cl_v_normal)) /
+                               (_particles.mass(i) + cloth->particles().mass(j));
+        
+        _particles.velocity(i) = sp_v_normal_AC * normal + sp_v_tangent_vec;
+        cloth->particles().velocity(j) = cl_v_normal_AC * normal + cl_v_tangent_vec;
+      }
+    }
+  }
 }
 
 void Spheres::collide() {
