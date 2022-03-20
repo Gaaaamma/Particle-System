@@ -134,5 +134,97 @@ void RungeKuttaFourth::integrate(const std::vector<Particles *> &particles,
   // Note:
   //   1. Use simulateOneStep with modified position and velocity to get Xn+1.
 
-  // Write code here!
+  // x(t+h) = x(t) + h * velocity
+  // x(t+h) = x(t) + 1/6 (k1+ 2k2 + 2k3 +k4)
+  // 1/6 (k1+ 2k2 + 2k3 +k4) => The main idea is to get the velocity / acceleration
+
+  // 0. Save original particles' data. (position / velocity / acceleration)
+  Eigen::Matrix4Xf cl_origin_position = particles[0]->position();
+  Eigen::Matrix4Xf cl_origin_velocity = particles[0]->velocity();
+  Eigen::Matrix4Xf cl_origin_acceleration = particles[0]->acceleration();
+
+  Eigen::Matrix4Xf sp_origin_position = particles[1]->position();
+  Eigen::Matrix4Xf sp_origin_velocity = particles[1]->velocity();
+  Eigen::Matrix4Xf sp_origin_acceleration = particles[1]->acceleration();
+
+  // 1. compute k1
+  Eigen::Matrix4Xf cl_k1_position = deltaTime * particles[0]->velocity();
+  Eigen::Matrix4Xf cl_k1_velocity = deltaTime * particles[0]->acceleration();
+  Eigen::Matrix4Xf sp_k1_position = deltaTime * particles[1]->velocity();
+  Eigen::Matrix4Xf sp_k1_velocity = deltaTime * particles[1]->acceleration();
+
+  particles[0]->position() += cl_k1_position / 2;
+  particles[0]->velocity() += cl_k1_velocity / 2;
+  particles[1]->position() += sp_k1_position / 2;
+  particles[1]->velocity() += sp_k1_velocity / 2;
+
+  // simulateOneStep() to get new velocity & acceleration
+  simulateOneStep();
+
+  // 2. compute k2
+  Eigen::Matrix4Xf cl_k2_position = deltaTime * particles[0]->velocity();
+  Eigen::Matrix4Xf cl_k2_velocity = deltaTime * particles[0]->acceleration();
+  Eigen::Matrix4Xf sp_k2_position = deltaTime * particles[1]->velocity();
+  Eigen::Matrix4Xf sp_k2_velocity = deltaTime * particles[1]->acceleration();
+
+  // 3. Recover particles' status & move
+  particles[0]->position() = cl_origin_position;
+  particles[0]->velocity() = cl_origin_velocity;
+  particles[0]->acceleration() = cl_origin_acceleration;
+
+  particles[1]->position() = sp_origin_position;
+  particles[1]->velocity() = sp_origin_velocity;
+  particles[1]->acceleration() = sp_origin_acceleration;
+
+  particles[0]->position() += cl_k2_position / 2;
+  particles[0]->velocity() += cl_k2_velocity / 2;
+  particles[1]->position() += sp_k2_position / 2;
+  particles[1]->velocity() += sp_k2_velocity / 2;
+
+  // simulateOneStep() to get new velocity & acceleration
+  simulateOneStep();
+
+  // 4. compute k3
+  Eigen::Matrix4Xf cl_k3_position = deltaTime * particles[0]->velocity();
+  Eigen::Matrix4Xf cl_k3_velocity = deltaTime * particles[0]->acceleration();
+  Eigen::Matrix4Xf sp_k3_position = deltaTime * particles[1]->velocity();
+  Eigen::Matrix4Xf sp_k3_velocity = deltaTime * particles[1]->acceleration();
+
+  // 5. Recover particles' status & move
+  particles[0]->position() = cl_origin_position;
+  particles[0]->velocity() = cl_origin_velocity;
+  particles[0]->acceleration() = cl_origin_acceleration;
+
+  particles[1]->position() = sp_origin_position;
+  particles[1]->velocity() = sp_origin_velocity;
+  particles[1]->acceleration() = sp_origin_acceleration;
+
+  particles[0]->position() += cl_k3_position;
+  particles[0]->velocity() += cl_k3_velocity;
+  particles[1]->position() += sp_k3_position;
+  particles[1]->velocity() += sp_k3_velocity;
+
+  // simulateOneStep() to get new velocity & acceleration
+  simulateOneStep();
+
+  // 6. compute k4
+  Eigen::Matrix4Xf cl_k4_position = deltaTime * particles[0]->velocity();
+  Eigen::Matrix4Xf cl_k4_velocity = deltaTime * particles[0]->acceleration();
+  Eigen::Matrix4Xf sp_k4_position = deltaTime * particles[1]->velocity();
+  Eigen::Matrix4Xf sp_k4_velocity = deltaTime * particles[1]->acceleration();
+
+  // 7. Recover particles' status & move
+  particles[0]->position() = cl_origin_position;
+  particles[0]->velocity() = cl_origin_velocity;
+  particles[0]->acceleration() = cl_origin_acceleration;
+
+  particles[1]->position() = sp_origin_position;
+  particles[1]->velocity() = sp_origin_velocity;
+  particles[1]->acceleration() = sp_origin_acceleration;
+
+  // 8. Final Computation
+  particles[0]->position() += (cl_k1_position + 2 * cl_k2_position + 2 * cl_k3_position + cl_k4_position) / 6;
+  particles[0]->velocity() += (cl_k1_velocity + 2 * cl_k2_velocity + 2 * cl_k3_velocity + cl_k4_velocity) / 6;
+  particles[1]->position() += (sp_k1_position + 2 * sp_k2_position + 2 * sp_k3_position + sp_k4_position) / 6;
+  particles[1]->velocity() += (sp_k1_velocity + 2 * sp_k2_velocity + 2 * sp_k3_velocity + sp_k4_velocity) / 6;
 }
