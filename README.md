@@ -2,6 +2,8 @@
 1102_CA&CE Class HW1
 
 ## Result Overview
+<img width="1282" alt="截圖 2022-05-16 下午11 12 33" src="https://user-images.githubusercontent.com/84212529/168625561-a361f0d1-aaa8-457b-9cdd-f875ee9e2a69.png">
+
 <img width="1283" alt="截圖 2022-05-15 下午4 06 42" src="https://user-images.githubusercontent.com/84212529/168463357-3b8e6fa0-9990-4c34-b717-5ce2fc715657.png">
 
 ## Introduction  
